@@ -48,8 +48,6 @@ def on_predict_postprocess_end(predictor):
         tracks = predictor.trackers[i].update(det, im0s[i])
         if len(tracks) == 0:
             continue
-        idx = tracks[:, -1].astype(int)
-        predictor.results[i] = predictor.results[i][idx]
         predictor.results[i].update(boxes=torch.as_tensor(tracks[:, :-1]))
 
 
