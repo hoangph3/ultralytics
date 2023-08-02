@@ -48,7 +48,7 @@ def on_predict_postprocess_end(predictor):
         tracks = predictor.trackers[i].update(det, im0s[i])
         if len(tracks) == 0:
             continue
-        predictor.results[i].update(boxes=torch.as_tensor(tracks[:, :-1]))
+        predictor.results[i].update(boxes=torch.as_tensor(tracks))
 
 
 def register_tracker(model, persist):
