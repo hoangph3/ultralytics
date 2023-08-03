@@ -237,7 +237,7 @@ class BasePredictor:
             self.model.warmup(imgsz=(1 if self.model.pt or self.model.triton else self.dataset.bs, 3, *self.imgsz))
             self.done_warmup = True
 
-        self.seen, self.windows, self.batch, profilers = 0, [], None, (ops.Profile(), ops.Profile(), ops.Profile())
+        self.seen, self.windows, self.batch, profilers = 0, [], None, (ops.Profile(), ops.Profile(), ops.Profile(), ops.Profile())
         self.run_callbacks('on_predict_start')
         for batch in self.dataset:
             self.run_callbacks('on_predict_batch_start')
@@ -258,6 +258,7 @@ class BasePredictor:
                     self.results = self.postprocess(preds, im, im0s)
                 else:
                     self.results = self.model.postprocess(path, preds, im, im0s)
+            with profilers[3]:
                 self.run_callbacks('on_predict_postprocess_end')
 
             # Visualize, save, write results
@@ -267,7 +268,8 @@ class BasePredictor:
                 self.results[i].speed = {
                     'preprocess': profilers[0].dt * 1E3 / n,
                     'inference': profilers[1].dt * 1E3 / n,
-                    'postprocess': profilers[2].dt * 1E3 / n}
+                    'postprocess': profilers[2].dt * 1E3 / n,
+                    'tracking': profilers[2].dt * 1E3 / n}
                 p, im0 = path[i], None if self.source_type.tensor else im0s[i].copy()
                 p = Path(p)
 
@@ -294,7 +296,7 @@ class BasePredictor:
         # Print results
         if self.args.verbose and self.seen:
             t = tuple(x.t / self.seen * 1E3 for x in profilers)  # speeds per image
-            LOGGER.info(f'Speed: %.1fms preprocess, %.1fms inference, %.1fms postprocess per image at shape '
+            LOGGER.info(f'Speed: %.1fms preprocess, %.1fms inference, %.1fms postprocess, %.1fms tracking per image at shape '
                         f'{(1, 3, *im.shape[2:])}' % t)
         if self.args.save or self.args.save_txt or self.args.save_crop:
             nl = len(list(self.save_dir.glob('labels/*.txt')))  # number of labels
