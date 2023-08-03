@@ -43,7 +43,7 @@ def on_predict_postprocess_end(predictor):
     bs = predictor.dataset.bs
     im0s = predictor.batch[1]
     for i in range(bs):
-        det = predictor.results[i].boxes.cpu().numpy()
+        det = predictor.results[i].boxes.data.cpu().numpy()
         if len(det) == 0:
             continue
         tracks = predictor.trackers[i].update(det, im0s[i])
