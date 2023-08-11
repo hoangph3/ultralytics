@@ -49,9 +49,13 @@ def on_predict_postprocess_end(predictor):
         tracks = predictor.trackers[i].update(det, im0s[i])
         if len(tracks) == 0:
             continue
-        idx = tracks[:, -1].astype(int)
-        predictor.results[i] = predictor.results[i][idx]
-        predictor.results[i].update(boxes=torch.as_tensor(tracks[:, :-1]))
+        # overwirte detection results by tracking results
+        predictor.results[i] = Results(
+            boxes=torch.from_numpy(tracks),
+            orig_img=im0s[i],
+            path='',
+            names=predictor.model.names
+        )
 
 
 def register_tracker(model, persist):
